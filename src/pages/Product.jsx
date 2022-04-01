@@ -5,8 +5,14 @@ import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import Chart from "../components/Chart";
-import { productData } from "../dummyData";
 import { userRequest } from "../requestMethodes";
+import CheckBox from "../components/CheckBox";
+import { filter } from "../utils";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import { ChromePicker } from "react-color";
+import ChooseColor from "../components/ChooseColor";
 
 const Container = styled.div`
   flex: 4;
@@ -97,14 +103,14 @@ const ProductFormLeft = styled.div`
     margin-bottom: 10px;
     color: gray;
   }
-  & > input {
+  & > input,
+  textarea {
     margin-bottom: 10px;
     border: none;
     padding: 5px;
     border-bottom: 1px solid gray;
-  }
-  & > select {
-    margin-bottom: 10px;
+    resize: none;
+    width: 200px;
   }
 `;
 
@@ -135,12 +141,27 @@ const ProductButton = styled.button`
   color: white;
   font-weight: 600;
   cursor: pointer;
+  width: 200px;
+`;
+const Wrappe = styled.div`
+  display: flex;
+  width: 800px;
+  flex-wrap: wrap;
 `;
 
 const Product = () => {
   const location = useLocation();
   const productId = location.pathname.split("/")[2];
-  const [productStats, setProductStats] = useState([])
+  const product = useSelector((state) =>
+    state.products.products.find((product) => product._id === productId)
+  );
+  const [productStats, setProductStats] = useState([]);
+  const [inputs, setInputs] = useState({});
+  const [size, setSize] = useState([]);
+  const [color, setColor] = useState("#fff");
+  const [colors, setColors] = useState(product.color);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [brand, setBrand] = useState(product.brand)
   const MONTHS = useMemo(
     () => [
       "Jan",
@@ -164,7 +185,7 @@ const Product = () => {
       try {
         const res = await userRequest.get("/orders/income?pid");
         res.data.map((item) => {
-            setProductStats((prev) => [
+          setProductStats((prev) => [
             ...prev,
             { name: MONTHS[item._id - 1], Sales: item.total },
           ]);
@@ -176,11 +197,33 @@ const Product = () => {
     getStats();
   }, [MONTHS]);
 
-  const product = useSelector((state) =>
-    state.products.products.find((product) => product._id === productId)
-  );
+  const countSales = () => {
+    let count = 0;
+    productStats.forEach((product) => {
+      count += product.Sales;
+    });
+    return count;
+  };
 
-  console.log(productStats)
+  const handleUpdate = () => {};
+
+  const handleChange = (e) => {
+    setInputs((prev) => {
+      return { ...prev, [e.target.name]: e.target.value };
+    });
+  };
+
+  const handlerColorPicker = (e) => {
+    e.preventDefault();
+    if (showColorPicker) {
+      setColors((prev) => {
+        return [...prev, color.replace("#", "")];
+      });
+      setShowColorPicker(false);
+    } else {
+      setShowColorPicker(true);
+    }
+  };
 
   return (
     <Container>
@@ -192,11 +235,15 @@ const Product = () => {
       </ProductTitleContainer>
       <ProductTop>
         <ProductTopLeft>
-          <Chart data={productStats} dataKey="Sales" title="Sales Performance" />
+          <Chart
+            data={productStats}
+            dataKey="Sales"
+            title="Sales Performance"
+          />
         </ProductTopLeft>
         <ProductTopRight>
           <ProductInfoTop>
-            <ProductInfoImg src={product.images} />
+            <ProductInfoImg src={product.image} />
             <ProductName>{product.title}</ProductName>
           </ProductInfoTop>
           <ProductInfoBottom>
@@ -206,11 +253,11 @@ const Product = () => {
             </ProductInfoItem>
             <ProductInfoItem>
               <ProductInfoKey>sales:</ProductInfoKey>
-              <ProductInfoValue>5123</ProductInfoValue>
+              <ProductInfoValue>{countSales()}</ProductInfoValue>
             </ProductInfoItem>
             <ProductInfoItem>
               <ProductInfoKey>in stock:</ProductInfoKey>
-              <ProductInfoValue>no</ProductInfoValue>
+              <ProductInfoValue>{product.countInStock}</ProductInfoValue>
             </ProductInfoItem>
           </ProductInfoBottom>
         </ProductTopRight>
@@ -219,16 +266,84 @@ const Product = () => {
         <ProductForm>
           <ProductFormLeft>
             <label>Product Name</label>
-            <input type="text" placeholder={product.title} />
+            <input
+              type="text"
+              placeholder={product.title}
+              name="title"
+              onChange={handleChange}
+            />
             <label>Product Description</label>
-            <input type="text" placeholder={product.description} />
+            <textarea
+              type="text"
+              placeholder={product.description}
+              name="description"
+              onChange={handleChange}
+            />
+            <label>Brand</label>
+            <FormControl
+              variant="standard"
+              sx={{ width: 210, marginBottom: 1 }}
+            >
+              <Select value={brand} onChange={(e) => setBrand(e.target.value)}>
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                <MenuItem value={"Shein"} >Shein</MenuItem>
+                <MenuItem value={"Nike"}>Nike</MenuItem>
+                <MenuItem value={"Adidas"}>Adidas</MenuItem>
+              </Select>
+            </FormControl>
+            <label>Catégories</label>
+            <Wrappe>
+              <CheckBox
+                options={filter.categories}
+                checking={product.categories}
+                handleFilters={setSize}
+              />
+            </Wrappe>
+            <label>Size</label>
+            <Wrappe>
+              <CheckBox
+                options={filter.size}
+                checking={product.size}
+                handleFilters={setSize}
+              />
+            </Wrappe>
+            <label>Color</label>
+            <ProductButton onClick={handlerColorPicker}>
+              Ajouter une couleur
+            </ProductButton>
+            {showColorPicker && (
+              <>
+                <ChromePicker
+                  color={color}
+                  onChange={(updateColor) => setColor(updateColor.hex)}
+                />
+                <ProductButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowColorPicker(false);
+                  }}
+                >
+                  Annuler
+                </ProductButton>
+              </>
+            )}
+            <ChooseColor colors={colors} setColors={setColors} />
             <label>Product Price</label>
-            <input type="number" placeholder={product.price} />
+            <input
+              type="number"
+              placeholder={product.price}
+              name="price"
+              onChange={handleChange}
+            />
             <label>In Stock</label>
-            <select name="inStock" id="inStock">
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
+            <input
+              type="number"
+              placeholder={product.countInStock}
+              name="countInStock"
+              onChange={handleChange}
+            />
           </ProductFormLeft>
           <ProductFormRight>
             <ProductUpload>
@@ -238,7 +353,7 @@ const Product = () => {
               </label>
               <input type="file" id="file" style={{ display: "none" }} />
             </ProductUpload>
-            <ProductButton>Update</ProductButton>
+            <ProductButton onClick={handleUpdate}>Update</ProductButton>
           </ProductFormRight>
         </ProductForm>
       </ProductBottom>

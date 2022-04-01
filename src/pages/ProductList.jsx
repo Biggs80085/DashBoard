@@ -55,16 +55,16 @@ const ProductList = () => {
       renderCell: (params) => {
         return (
           <ProductListItem>
-            <ProductListImg src={params.row.img} />
+            <ProductListImg src={params.row.image} />
             {params.row.title}
           </ProductListItem>
         );
       },
     },
-    { field: "stock", headerName: "Stock", width: 200 },
+    { field: "countInStock", headerName: "Stock", width: 200 },
     {
-      field: "status",
-      headerName: "Status",
+      field: "size",
+      headerName: "Sizes",
       width: 120,
     },
     {

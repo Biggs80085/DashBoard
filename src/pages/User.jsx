@@ -1,5 +1,6 @@
 import { CalendarToday, LocationSearching, MailOutline, PermIdentity, PhoneAndroid, Publish } from "@material-ui/icons";
-import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Link, useLocation } from "react-router-dom";
 import styled from "styled-components"
 
 const Container = styled.div`
@@ -126,7 +127,15 @@ const UserUpdateButton = styled.button`
     font-weight: 600;
 `;
 
+
 function User() {
+
+const location = useLocation();
+const userId = location.pathname.split("/")[2];
+
+const user = useSelector((state) =>
+    state.users.users.find((user) => user._id === userId)
+);
   return (
     <Container>
         <UserTitleContainer>
@@ -138,38 +147,29 @@ function User() {
         <UserContainer>
             <UserShow>
                 <UserShowTop>
-                    <UserShowImg src="../img/model.png"/>
+                    <UserShowImg src="https://lesexpertsdurecouvrement.com/wp-content/uploads/2015/11/default-avatar.jpg"/>
                     <UserShowTopTitle>
-                        <UserShowUsername>Anna Becker</UserShowUsername>
-                        <UserShowUserTitle>Software Engineer</UserShowUserTitle>
+                        <UserShowUsername>{user.userName.name + " " + user.userName.lastName}</UserShowUsername>
+                        <UserShowUserTitle>{ user.isAdmin ? "Admin" : "Not Admin" }</UserShowUserTitle>
                     </UserShowTopTitle>
                 </UserShowTop>
                 <UserShowBottom>
                     <UserShowTitle>Account Details</UserShowTitle>
                     <UserShowInfo>
                         <PermIdentity style={{ fontSize: 16 }}/>
-                        <UserShowInfoTitle>annabeck99</UserShowInfoTitle>
-                    </UserShowInfo>
-
-                    <UserShowInfo>
-                        <CalendarToday style={{ fontSize: 16 }}/>
-                        <UserShowInfoTitle>10.12.1999</UserShowInfoTitle>
+                        <UserShowInfoTitle>{user._id}</UserShowInfoTitle>
                     </UserShowInfo>
 
                     <UserShowTitle>Contact Details</UserShowTitle>
-                    <UserShowInfo>
-                        <PhoneAndroid style={{ fontSize: 16 }}/>
-                        <UserShowInfoTitle>+1 123 456 78</UserShowInfoTitle>
-                    </UserShowInfo>
-
+                    
                     <UserShowInfo>
                         <MailOutline style={{ fontSize: 16 }}/>
-                        <UserShowInfoTitle>annabeck99@gmail.com</UserShowInfoTitle>
+                        <UserShowInfoTitle>{user.email}</UserShowInfoTitle>
                     </UserShowInfo>
 
                     <UserShowInfo>
                         <LocationSearching style={{ fontSize: 16 }}/>
-                        <UserShowInfoTitle>New York | USA</UserShowInfoTitle>
+                        <UserShowInfoTitle>{user.addresse[0].city + " | " + user.addresse[0].country}</UserShowInfoTitle>
                     </UserShowInfo>
                 </UserShowBottom>
             </UserShow>
@@ -178,51 +178,32 @@ function User() {
                 <UserUpdateForm>
                     <UserUpdateLeft>
                         <UserUpdateItem>
-                            <label>Username</label>
+                            <label>Nom</label>
                             <UserUpdateInput 
                                 type="text"
-                                placeholder="annabeck99"
+                                placeholder={user.userName.lastName}
                             />
                         </UserUpdateItem>
 
                         <UserUpdateItem>
-                            <label>Full Name</label>
+                            <label>Prénom</label>
                             <UserUpdateInput 
                                 type="text"
-                                placeholder="Anna Becker"
+                                placeholder={user.userName.name}
                             />
                         </UserUpdateItem>
 
                         <UserUpdateItem>
                             <label>Email</label>
                             <UserUpdateInput 
-                                type="text"
-                                placeholder="annabeck99@gmail.com"
+                                type="email"
+                                placeholder={user.email}
                             />
                         </UserUpdateItem>
 
-                        <UserUpdateItem>
-                            <label>Phone</label>
-                            <UserUpdateInput 
-                                type="text"
-                                placeholder="+1 123 456 78"
-                            />
-                        </UserUpdateItem>
-
-                        <UserUpdateItem>
-                            <label>Address</label>
-                            <UserUpdateInput 
-                                type="text"
-                                placeholder="New York | USA"
-                            />
-                        </UserUpdateItem>
                     </UserUpdateLeft>
                     <UserUpdateRight>
-                        <UserUpdateUpload>
-                            <UserUpdateImg src="../img/model.png"/>
-                            <label htmlFor="file"><Publish style={{ cursor: "pointer" }}/></label>
-                            <input type="file" id="file" style={{ display: "none" }} />
-                        </UserUpdateUpload>
+                        <UserUpdateImg src="https://lesexpertsdurecouvrement.com/wp-content/uploads/2015/11/default-avatar.jpg"/>
                         <UserUpdateButton>Update</UserUpdateButton>
                     </UserUpdateRight>
                 </UserUpdateForm>

@@ -3,7 +3,9 @@ import { DataGrid } from "@material-ui/data-grid";
 import { DeleteOutline } from "@material-ui/icons";
 import { userRows } from "../dummyData";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteUser, getUser } from "../redux/apiCalls";
 
 const Container = styled.div`
     flex:4;
@@ -30,33 +32,37 @@ const UserListEdit = styled.button`
 `;
 
 function UserList() {
-    const [data, setData] = useState(userRows);
+    const dispatch = useDispatch();
+    const users = useSelector((state) => state.users.users);
 
     const handleDelete = (id) => {
-        setData(data.filter((item)=>item.id !== id));
+        deleteUser(id, dispatch)
     }
+    useEffect(() => {
+      getUser(dispatch);
+    }, []);
 
     const columns = [
-        { field: 'id', headerName: 'ID', width: 90 },
-        { field: 'user', headerName: 'User', width: 200, renderCell: (params) =>{
+        { field: '_id', headerName: 'ID', width: 220 },
+        { field: 'userName.name', headerName: 'User', width: 200, renderCell: (params) =>{
             return(
                 <UserListUser>
-                    <UserListImg src={params.row.avatar}/>
-                    {params.row.username}
+                    <UserListImg src="https://lesexpertsdurecouvrement.com/wp-content/uploads/2015/11/default-avatar.jpg"/>
+                    {params.row.userName.name + " " + params.row.userName.lastName}
                 </UserListUser>
             )
         } },
         { field: 'email', headerName: 'Email', width: 200 },
         {
-          field: 'status',
-          headerName: 'Status',
+          field: 'isAdmin',
+          headerName: 'Admin',
           width: 120,
         },
-        {
+        /*{
           field: 'transaction',
           headerName: 'Transaction Volume',
           width: 160,
-        },
+        },*/
         {
           field:"action",
           headerName:"Action",
@@ -64,10 +70,10 @@ function UserList() {
           renderCell: (params) =>{
               return(
                   <>
-                    <Link to={"/user/"+params.row.id}>
+                    <Link to={"/user/"+params.row._id}>
                         <UserListEdit>Edit</UserListEdit>
                     </Link> 
-                    <DeleteOutline style={{ color: "red", cursor:"pointer" }} onClick={()=>handleDelete(params.row.id)} />
+                    <DeleteOutline style={{ color: "red", cursor:"pointer" }} onClick={()=>handleDelete(params.row._id)} />
                   </>
               )
           }
@@ -77,9 +83,10 @@ function UserList() {
   return (
     <Container>
         <DataGrid
-        rows={data}
+        rows={users}
         disableSelectionOnClick
         columns={columns}
+        getRowId={(row) => row._id}
         pageSize={8}
         rowsPerPageOptions={[5]}
         checkboxSelection
